@@ -89,3 +89,12 @@ module "eks" {
 
   tags = local.tags
 }
+
+resource "aws_instance" "instance" {
+  subnet_id     = "${module.vpc.public_subnets[0]}"
+  ami           = "ami-0515f3963c203d061"  # Specify the AMI ID of the instance you want to launch
+  instance_type = "t2.micro"               # Specify the instance type
+  tags = {
+    Name = "ExampleInstance"  # Tag for the instance
+  }
+}

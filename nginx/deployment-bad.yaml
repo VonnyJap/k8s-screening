@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      nodeSelector: # Adding a nodeSelector that doesn't match any nodes
+        disktype: ssd
+      containers:
+        - name: nginx
+          image: nginx:latest
+          ports:
+            - containerPort: 4080 # bad port number since cat /etc/nginx/conf.d/default.conf | grep listen
+          command: ["sh", "-c", "echo $VAR"] # Referencing a non-existent environment variable
+          volumeMounts:
+            - name: data-volume
+              mountPath: /data
+          resources:
+            requests:
+              cpu: "1000m" # Requesting 1000 milli CPUs (1 CPU)
+              memory: "100Gi" # Requesting 100 Gigabytes of memory
+      volumes:
+        - name: data-volume
+          emptyDir: {} # Volume mount that does not exist
