@@ -34,6 +34,7 @@ module "vpc" {
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = 1
+    "map_public_ip_on_launch" = true
   }
 
   private_subnet_tags = {
@@ -90,11 +91,44 @@ module "eks" {
   tags = local.tags
 }
 
+resource "null_resource" "create_key_pair" {
+  provisioner "local-exec" {
+    command = "${path.module}/create_key_pair.sh"
+  }
+}
+
 resource "aws_instance" "instance" {
   subnet_id     = "${module.vpc.public_subnets[0]}"
-  ami           = "ami-0515f3963c203d061"  # Specify the AMI ID of the instance you want to launch
-  instance_type = "t2.micro"               # Specify the instance type
+  ami           = "ami-0515f3963c203d061"   # Specify the AMI ID of the instance you want to launch
+  instance_type = "t2.micro"                # Specify the instance type
+  key_name      = "my-key-pair"             # key pair name
+
+  associate_public_ip_address = true  # Ensure that the instance gets a public IP address
+
   tags = {
     Name = "ExampleInstance"  # Tag for the instance
   }
+
+  user_data = <<-EOF
+              #!/bin/bash
+              # Update package index
+              sudo yum update -y
+              
+              # Install AWS CLI v2
+              sudo yum install -y unzip curl
+              curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+              unzip awscliv2.zip
+              sudo ./aws/install
+              
+              # Install kubectl
+              curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.14/2023-01-30/bin/linux/amd64/kubectl
+              chmod +x ./kubectl
+              sudo mv ./kubectl /usr/local/bin
+
+              # Verify installations
+              aws --version
+              kubectl version --client
+              EOF
+              
+  depends_on = [null_resource.create_key_pair]
 }

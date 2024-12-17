@@ -135,3 +135,6 @@ export KUBECONFIG="$HOME/.kube/candidate-ascode-cluster"
 
 echo "verify the permissions"
 kubectl get namespaces
+
+
+# create the ssh key pair first using aws command
