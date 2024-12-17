@@ -12,14 +12,32 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+      - name: Random exit
+        run: |
+          number=$((RANDOM % 2))
+          if [ $number -eq 0 ]; then
+            echo "Even number: $number"
+            exit 0
+          else
+            echo "Odd number: $number"
+            exit 1
+          fi
 
-      - name: Run tests
-        run: echo "Running tests for the PR"
+  another-pr-job:
+    name: Another job triggered by PR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Run a script
+        run: echo "This is another job triggered by PR"
 
   dependent-job:
-    name: Job triggered by PR job
+    name: Job triggered by PR jobs
     runs-on: ubuntu-latest
-    needs: pr-job # This job runs after `pr-job`
+    needs:
+      - pr-job
+      - another-pr-job
     steps:
       - name: Perform dependent actions
-        run: echo "This job runs after the PR job completes"
+        run: echo "This job runs after the PR jobs complete"
